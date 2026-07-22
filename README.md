@@ -35,6 +35,7 @@ dist = song_distance(song1, song2, W=system, p=1.0)
 
 ## Package Structure
 
+```
 leadsheetanalyser/
 ├── chords.py                # Chord processing and parsing
 ├── chord_dissimilarities.py # Modal embeddings and chord distances

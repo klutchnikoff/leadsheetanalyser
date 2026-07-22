@@ -175,17 +175,22 @@ class TestDataProcessing(unittest.TestCase):
         
         # Mock JAMS loading
         mock_jam = MagicMock()
-        mock_jam.annotations = [MagicMock()]
-        mock_jam.annotations[0].data = [
+        chord_ann = MagicMock()
+        chord_ann.namespace = 'chord_harte'
+        chord_ann.data = [
             MagicMock(time=0.0, duration=2.0, value='C:maj'),
             MagicMock(time=2.0, duration=2.0, value='F:maj'),
             MagicMock(time=4.0, duration=2.0, value='G:7'),
             MagicMock(time=6.0, duration=2.0, value='C:maj')
         ]
+        key_ann = MagicMock()
+        key_ann.namespace = 'key_mode'
+        key_ann.data = [MagicMock(time=0.0, duration=0.0, value='C:maj')]
+        mock_jam.annotations = [chord_ann, key_ann]
         mock_jams_load.return_value = mock_jam
         
         # Test processing
-        result = process_song_data(self.sample_df, self.temp_dir)
+        result = process_song_data(self.sample_df, self.temp_dir, return_format='list')
         
         self.assertIsInstance(result, list)
         self.assertGreater(len(result), 0)

@@ -1,0 +1,55 @@
+
+# Tests
+
+```{python}
+from music21 import chord, harmony, interval, pitch
+from harte.harte import Harte
+import numpy as np
+```
+
+```{python}
+def as_chord(x):
+    """
+    Convert various representations to a music21.chord.Chord.
+    """
+    try:
+        if isinstance(x, harmony.ChordSymbol):
+            C = x.chord
+        else:
+            C = chord.Chord(x)
+        return C
+    except Exception as e:
+        raise ValueError(f"Could not convert {x} to chord: {e}") 
+```        
+```{python}
+def transpose_to_c(x):
+    """
+    x: music21.chord.Chord, harmony.ChordSymbol, Harte chord, list/str...
+    """
+    pc_C = pitch.Pitch('C')
+    C = as_chord(x)
+    r = C.root()
+    if r is None:
+        r = C.bass() if C.bass() is not None else C.pitches[0]
+    I = interval.Interval(r, pc_C)
+    return C.transpose(I)
+```
+
+```{python}
+def harte_to_root_kind(C):
+    """
+    12-dim (multi-)one-hot vector of pitch-class PRESENCE (C=0,...,B=11).
+    """
+    C = as_chord(C)
+    r = C.root()  # ensure C is a music21.chord.Chord
+    C = transpose_to_c(C)
+    v = np.zeros(12, dtype=int)
+    for pc in C.pitchClasses:      # unique pitch classes in the chord
+        v[pc] = 1
+    return r, v[1:]
+```
+
+```{python}
+c1 = Harte('Bb:maj(9)/3') # set bass to the chord’s root
+harte_to_root_kind(c1)
+```

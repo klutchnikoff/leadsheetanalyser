@@ -43,6 +43,39 @@ ln -s choco/partitions/ireal-pro/jams jams_files
 cd ..
 ```
 
+## 🧱 Build the processed corpus
+
+`download_data.py` fetches the JAMS annotations.  The analysis scripts read
+processed pickles, which are **not** distributed: they are gitignored and absent
+from the wheel.  Build them once the JAMS are in place.
+
+```bash
+# The corpus the article studies: the Real Book partition
+python scripts/build_corpus.py
+
+# Check a rebuild against the pickle already on disk, without overwriting it
+python scripts/build_corpus.py --verify
+
+# Any other ChoCo partition
+python scripts/build_corpus.py --partition ireal-pro
+```
+
+Expected output for the default partition:
+
+```
+  2846 metadata rows for real-book
+  2846 songs processed
+  172802 chord tokens
+```
+
+Only the *Real Book* side needs a pickle.  The common-practice side of the
+article (`when-in-rome`) is read straight from `data/jams_files`, so no build
+step applies to it.
+
+Note on `--verify`: it compares values, not storage.  pandas 3 infers the `str`
+dtype for text columns that earlier versions left as `object`, so a faithful
+rebuild would otherwise fail against a pickle written before that change.
+
 ## 📋 Data Management Best Practices
 
 ### 1. Working with the Data

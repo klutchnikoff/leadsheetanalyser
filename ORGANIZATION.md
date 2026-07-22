@@ -22,7 +22,7 @@ leadsheetanalyser/
 **Purpose**: Central repository for all musical constants and data structures
 - **Note Mappings**: `NOTE_TO_PC`, `PC_TO_NOTE_FLAT`, `PC_TO_NOTE_SHARP` (17-17 note mappings)
 - **Chord Definitions**: `CHORD_SHORTHANDS` (19 types), `SIMPLIFIED_CHORD_NAMES` (55 mappings)
-- **Modal Systems**: `W_PYTHAGOREAN` (7 modes), `W_MESSIAEN` (15 modes)
+- **Modal Systems**: `W_DIATONIC` (7 modes), `W_MESSIAEN` (15 modes)
 - **Utility Constants**: `CHORD_NAME_CLEANUP_STRINGS`, mode name lists
 
 ### 2. `chords.py` 

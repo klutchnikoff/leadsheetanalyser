@@ -14,7 +14,7 @@ This directory contains comprehensive tests for the leadsheetanalyser package, e
 Tests for musical constants and mappings:
 - Note to pitch class mappings
 - Chord shorthand definitions
-- Pythagorean and Messiaen mode constants
+- Diatonic and Messiaen mode constants
 
 #### 2. `test_chords.py` (14 tests - ✅ All Passing)
 Core chord processing functionality:

@@ -5,7 +5,7 @@ import unittest
 from leadsheetanalyser.constants import (
     NOTE_TO_PC, PC_TO_NOTE_FLAT, PC_TO_NOTE_SHARP,
     CHORD_SHORTHANDS, SIMPLIFIED_CHORD_NAMES,
-    W_PYTHAGOREAN, PYTHAGOREAN_MODE_NAMES,
+    W_DIATONIC, DIATONIC_MODE_NAMES,
     W_MESSIAEN, MESSIAEN_MODE_NAMES
 )
 
@@ -58,17 +58,17 @@ class TestConstants(unittest.TestCase):
         self.assertEqual(CHORD_SHORTHANDS['7'], (4, 7, 10))
         self.assertEqual(CHORD_SHORTHANDS['maj7'], (4, 7, 11))
     
-    def test_pythagorean_constants(self):
-        """Test Pythagorean mode constants."""
-        # W_PYTHAGOREAN should be a list of 7 elements
-        self.assertEqual(len(W_PYTHAGOREAN), 7)
+    def test_diatonic_constants(self):
+        """Test Diatonic mode constants."""
+        # W_DIATONIC should be a list of 7 elements
+        self.assertEqual(len(W_DIATONIC), 7)
         # Elements are numpy arrays with fractions
-        self.assertTrue(all(hasattr(x, '__len__') for x in W_PYTHAGOREAN))
+        self.assertTrue(all(hasattr(x, '__len__') for x in W_DIATONIC))
         
-        # PYTHAGOREAN_MODE_NAMES should have 7 names
-        self.assertEqual(len(PYTHAGOREAN_MODE_NAMES), 7)
-        self.assertIn('Ionian', PYTHAGOREAN_MODE_NAMES)
-        self.assertIn('Dorian', PYTHAGOREAN_MODE_NAMES)
+        # DIATONIC_MODE_NAMES should have 7 names
+        self.assertEqual(len(DIATONIC_MODE_NAMES), 7)
+        self.assertIn('Ionian', DIATONIC_MODE_NAMES)
+        self.assertIn('Dorian', DIATONIC_MODE_NAMES)
     
     def test_messiaen_constants(self):
         """Test Messiaen mode constants."""

@@ -36,7 +36,7 @@ class MusicalSystem:
         mode_names : List[str]
             Names of the modal dimensions (columns of the resulting representation)
         name : str
-            Name of the musical system (e.g., "Pythagorean", "Messiaen")
+            Name of the musical system (e.g., "Diatonic", "Messiaen")
         description : str, optional
             Description of the theoretical background
         """
@@ -113,7 +113,7 @@ class MusicalSystem:
         # Default colors for different systems
         if colors is None:
             color_schemes = {
-                'Pythagorean': ['#2E86AB', '#A23B72', '#F18F01', '#C73E1D'],
+                'Diatonic': ['#2E86AB', '#A23B72', '#F18F01', '#C73E1D'],
                 'Messiaen': ['#6A994E', '#BC4749', '#F2CC8F', '#81B29A'],
                 'default': ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728']
             }
@@ -213,17 +213,17 @@ def create_predefined_systems():
         Dictionary of predefined musical systems
     """
     from leadsheetanalyser.constants import (
-        W_PYTHAGOREAN, PYTHAGOREAN_MODE_NAMES,
+        W_DIATONIC, DIATONIC_MODE_NAMES,
         W_MESSIAEN, MESSIAEN_MODE_NAMES
     )
     
     systems = {}
     
-    # Pythagorean system
-    systems['pythagorean'] = MusicalSystem(
-        matrix=W_PYTHAGOREAN,
-        mode_names=PYTHAGOREAN_MODE_NAMES,
-        name="Pythagorean",
+    # Diatonic system
+    systems['diatonic'] = MusicalSystem(
+        matrix=W_DIATONIC,
+        mode_names=DIATONIC_MODE_NAMES,
+        name="Diatonic",
         description="Traditional church modes for analyzing conventional harmonic relationships"
     )
     

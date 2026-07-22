@@ -179,17 +179,17 @@ def identify_mode(scale: Union[List[int], np.ndarray]) -> dict:
     Returns:
         dict: Information about potential mode matches
     """
-    from .constants import W_PYTHAGOREAN, PYTHAGOREAN_MODE_NAMES, W_MESSIAEN, MESSIAEN_MODE_NAMES
+    from .constants import W_DIATONIC, DIATONIC_MODE_NAMES, W_MESSIAEN, MESSIAEN_MODE_NAMES
     
     if isinstance(scale, list):
         scale = np.array(scale)
     
-    # Check against Pythagorean modes
-    pythagorean_matches = []
-    for i, mode_weights in enumerate(W_PYTHAGOREAN):
+    # Check against Diatonic modes
+    diatonic_matches = []
+    for i, mode_weights in enumerate(W_DIATONIC):
         mode_binary = (mode_weights > 0).astype(int)
         if np.array_equal(scale[1:], mode_binary):  # Compare intervals (skip root)
-            pythagorean_matches.append(PYTHAGOREAN_MODE_NAMES[i])
+            diatonic_matches.append(DIATONIC_MODE_NAMES[i])
     
     # Check against Messiaen modes
     messiaen_matches = []
@@ -201,7 +201,7 @@ def identify_mode(scale: Union[List[int], np.ndarray]) -> dict:
     properties = analyze_mode_properties(scale)
     
     return {
-        'pythagorean_matches': pythagorean_matches,
+        'diatonic_matches': diatonic_matches,
         'messiaen_matches': messiaen_matches,
         'properties': properties
     }

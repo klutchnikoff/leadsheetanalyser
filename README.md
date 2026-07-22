@@ -5,7 +5,7 @@ A specialized Python package for leadsheet analysis using chord dissimilarity me
 ## Features
 
 - **🎼 Chord Processing**: Parse both Harte notation (`A:min`) and shorthand (`Am`)
-- **📐 Modal Embeddings**: Map chords into continuous geometric spaces using musical systems (e.g. Pythagorean, Messiaen)
+- **📐 Modal Embeddings**: Map chords into continuous geometric spaces using musical systems (e.g. Diatonic, Messiaen)
 - **🧮 Optimal Transport**: Compute alignment and distance between entire chord progressions
 - **💾 Data Processing**: Tools for musical datasets (JAMS format support)
 - **📚 Rich Constants**: Comprehensive musical constants and predefined systems

@@ -1,6 +1,6 @@
 [project]
 name = "leadsheetanalyser"
-version = "0.1.0"
+version = "0.2.0"
 description = "A package for music analysis, chord processing, and harmonic analysis via modal systems and optimal transport"
 authors = [
     { name = "Nicolas Klutchnikoff", email = "nicolas.klutchnikoff@univ-rennes2.fr" },

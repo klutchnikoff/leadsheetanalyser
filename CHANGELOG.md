@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Transposition utilities
   
 - 📊 **Musical Systems Framework**: Extensible harmonic analysis system
-  - Pythagorean modes representation
+  - Diatonic modes representation
   - Messiaen modes of limited transposition
   - Hierarchical clustering with custom systems
   - Comparative analysis tools

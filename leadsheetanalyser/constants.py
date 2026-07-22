@@ -134,11 +134,11 @@ CHORD_NAME_CLEANUP_STRINGS = [
 ]
 
 # =============================================================================
-# PYTHAGOREAN MODES (CHURCH MODES)
+# DIATONIC MODES (CHURCH MODES)
 # =============================================================================
 
-# Pythagorean modes (church modes) with weighted priorities
-W_PYTHAGOREAN = np.array([
+# Diatonic modes (church modes) with weighted priorities
+W_DIATONIC = np.array([
     [0, 1, 0, 2, 2, 0, 2, 0, 1, 0, 2],  # Ionian (C major)
     [0, 1, 3, 0, 1, 0, 2, 0, 2, 1, 0],  # Dorian (D)
     [2, 0, 2, 0, 1, 0, 3, 1, 0, 1, 0],  # Phrygian (E)
@@ -149,9 +149,9 @@ W_PYTHAGOREAN = np.array([
 ], dtype=float)
 
 # Normalize to probability vectors
-W_PYTHAGOREAN = W_PYTHAGOREAN / W_PYTHAGOREAN.sum(axis=1, keepdims=True)
+W_DIATONIC = W_DIATONIC / W_DIATONIC.sum(axis=1, keepdims=True)
 
-PYTHAGOREAN_MODE_NAMES = [
+DIATONIC_MODE_NAMES = [
     "Ionian", 
     "Dorian", 
     "Phrygian", 

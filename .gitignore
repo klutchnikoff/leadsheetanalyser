@@ -216,3 +216,4 @@ data/music_realbook.pkl
 
 # pdm local interpreter path
 .pdm-python
+pdm.lock

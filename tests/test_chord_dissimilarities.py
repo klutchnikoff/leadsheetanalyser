@@ -6,7 +6,7 @@ import numpy as np
 from leadsheetanalyser.chord_dissimilarities import (
     reinterpret_chord, modal_dissimilarity, simple_dissimilarity,
     tonal_dissimilarity, chord_name_to_tuple, modal_embedding,
-    create_identity_system, create_tonal_system
+    create_identity_system, create_tonal_system, modal_profile
 )
 from leadsheetanalyser.chords import map_chord
 
@@ -202,3 +202,85 @@ class TestChordDissimilarities(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class TestModalProfile(unittest.TestCase):
+    """The power-mean reading of a chord kind, over its order p."""
+
+    def setUp(self):
+        from leadsheetanalyser.constants import W_DIATONIC, W_MESSIAEN
+        self.W = np.vstack([np.asarray(W_DIATONIC, float),
+                            np.asarray(W_MESSIAEN, float)[:2]])
+        self.dom7 = self._kind(4, 7, 10)
+        self.maj7 = self._kind(4, 7, 11)
+        self.dim7 = self._kind(3, 6, 9)
+
+    @staticmethod
+    def _kind(*semitones):
+        v = np.zeros(11, dtype=int)
+        for s in semitones:
+            v[s - 1] = 1
+        return v
+
+    def test_is_a_distribution(self):
+        for p in (1.0, 0.5, 0.15, 0.0, -1.0):
+            profile = modal_profile(self.dom7, self.W, p)
+            self.assertAlmostEqual(float(profile.sum()), 1.0, places=12)
+            self.assertTrue((profile >= 0).all())
+
+    def test_order_one_is_the_normalised_coverage(self):
+        """At p = 1 the mean is arithmetic: the weight the mode puts in the chord."""
+        expected = self.W @ self.dom7
+        expected = expected / expected.sum()
+        np.testing.assert_allclose(modal_profile(self.dom7, self.W, 1.0),
+                                   expected, atol=1e-12)
+
+    def test_order_zero_is_the_geometric_mean(self):
+        """At p = 0 a mode missing one interval of the chord is annihilated."""
+        idx = np.flatnonzero(self.dim7)
+        geometric = np.prod(self.W[:, idx], axis=1) ** (1.0 / len(idx))
+        expected = geometric / geometric.sum()
+        np.testing.assert_allclose(modal_profile(self.dim7, self.W, 0.0),
+                                   expected, atol=1e-12)
+
+    def test_half_order_ranks_like_the_hellinger_affinity(self):
+        """M_{1/2} is the square of the Hellinger affinity: same order, not same value."""
+        for kind in (self.dom7, self.maj7, self.dim7):
+            hellinger = np.sqrt(self.W) @ kind
+            np.testing.assert_array_equal(
+                np.argsort(modal_profile(kind, self.W, 0.5)),
+                np.argsort(hellinger))
+
+    def test_sharpens_as_the_order_falls(self):
+        tops = [modal_profile(self.dim7, self.W, p).max()
+                for p in (1.0, 0.5, 0.2, 0.05)]
+        self.assertEqual(tops, sorted(tops))
+
+    def test_small_order_does_not_overflow(self):
+        """The exponent 1/p reaches 33 at p = 0.03: the direct form would overflow."""
+        profile = modal_profile(self.dom7, self.W, 0.03)
+        self.assertTrue(np.isfinite(profile).all())
+        self.assertAlmostEqual(float(profile.sum()), 1.0, places=12)
+
+    def test_kind_without_intervals_has_no_profile(self):
+        self.assertIsNone(modal_profile(np.zeros(11, dtype=int), self.W))
+
+    def test_uncontained_kind_has_no_profile_at_order_zero(self):
+        """Both sevenths at once: no mode of the system contains that kind."""
+        both_sevenths = self._kind(4, 7, 10, 11)
+        self.assertIsNone(modal_profile(both_sevenths, self.W, 0.0))
+        self.assertIsNotNone(modal_profile(both_sevenths, self.W, 0.15))
+
+    def test_batch_matches_one_by_one(self):
+        kinds = np.array([self.dom7, self.maj7, self.dim7])
+        batch = modal_profile(kinds, self.W, 0.15)
+        self.assertEqual(batch.shape, (3, self.W.shape[0]))
+        for row, kind in zip(batch, kinds):
+            np.testing.assert_allclose(row, modal_profile(kind, self.W, 0.15),
+                                       atol=1e-12)
+
+    def test_batch_marks_unreadable_kinds_with_nan(self):
+        kinds = np.array([self.dom7, np.zeros(11, dtype=int)])
+        batch = modal_profile(kinds, self.W, 0.15)
+        self.assertFalse(np.isnan(batch[0]).any())
+        self.assertTrue(np.isnan(batch[1]).all())

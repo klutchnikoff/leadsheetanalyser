@@ -171,6 +171,90 @@ def modal_embedding(kind_vec: np.ndarray, W: np.ndarray, mode: str = "linear") -
     return emb
 
 
+def modal_profile(kind_vec: np.ndarray, W: np.ndarray, p: float = 0.15) -> Union[np.ndarray, None]:
+    """
+    Modal profile of a chord kind: a distribution over the modes of W.
+
+    Each mode is compared to the kind through the power mean of order p of its
+    own weights, taken over the intervals the kind contains,
+
+        M_p(k, j) = ( (1/|k|) * sum_{i in k} (w^j_i)^p )^(1/p),
+
+    and the profile is M_p(k, .) normalised to sum to one.
+
+    The order p sets how severely an interval of the chord that the mode does
+    not contain is punished.  At p = 1 its null term costs nothing, and the
+    profile is the normalised weight the mode places inside the chord.  As p
+    decreases that null term weighs more, and the profile sharpens.  At p = 0
+    the mean is geometric and a single missing interval annihilates the mode,
+    which is the reading "on which scale does this chord sit"; the same holds
+    for every p < 0.  Orders p <= 0 therefore leave a kind that no mode
+    contains without any profile at all, whereas every p > 0 keeps one.
+
+    Computed through logarithms: the direct form overflows for small p, the
+    exponent 1/p reaching 33 at p = 0.03.
+
+    Parameters:
+    - kind_vec: binary vector of length 11, or an array of shape (n, 11)
+    - W: system matrix of shape (m, 11), each row a distribution over intervals
+    - p: order of the power mean (default 0.15)
+
+    Returns:
+    - np.ndarray of shape (m,) summing to one, or of shape (n, m) for a batch.
+      A kind with no interval at all, and at p <= 0 a kind that no mode
+      contains, has no profile: None is returned for a single kind, and a row
+      of NaN for a batch.
+
+    Example:
+    >>> from leadsheetanalyser.constants import W_DIATONIC
+    >>> c7 = np.array([0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0])   # root, 3rd, 5th, b7
+    >>> profile = modal_profile(c7, np.asarray(W_DIATONIC, float))
+    >>> float(profile.sum())
+    1.0
+    """
+    W = np.asarray(W, dtype=float)
+    validate_musical_system(W)
+
+    K = np.asarray(kind_vec, dtype=float)
+    single = K.ndim == 1
+    if single:
+        validate_chord_kind(kind_vec)
+        K = K[None, :]
+    elif K.ndim != 2 or K.shape[1] != W.shape[1]:
+        raise ValueError(
+            f"kind_vec must have shape ({W.shape[1]},) or (n, {W.shape[1]}), "
+            f"got {K.shape}"
+        )
+
+    Wt = W.T                                   # (11, m)
+    sizes = K.sum(axis=1)                      # (n,)
+    absent = K @ (Wt == 0).astype(float)       # intervals of k the mode lacks
+
+    with np.errstate(divide="ignore", invalid="ignore"):
+        if p > 0:
+            # a missing interval contributes 0**p = 0, so the sum is safe
+            log_mean = np.log(K @ (Wt ** p)) / p
+        else:
+            # 0**p is infinite here, so the missing modes are masked out instead
+            safe = np.where(Wt > 0, Wt, 1.0)
+            if p == 0:
+                log_mean = (K @ np.log(safe)) / np.where(sizes > 0, sizes, 1.0)[:, None]
+            else:
+                log_mean = np.log(K @ (safe ** p)) / p
+            log_mean = np.where(absent > 0, -np.inf, log_mean)
+
+        top = log_mean.max(axis=1, keepdims=True)
+        weights = np.exp(log_mean - top)
+        profile = weights / weights.sum(axis=1, keepdims=True)
+
+    unreadable = (sizes == 0) | ~np.isfinite(top[:, 0])
+    profile[unreadable] = np.nan
+
+    if single:
+        return None if unreadable[0] else profile[0]
+    return profile
+
+
 # =============================================================================
 # DISSIMILARITY FUNCTIONS
 # =============================================================================

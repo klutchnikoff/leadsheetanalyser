@@ -16,7 +16,10 @@ This document explains how to handle the ChoCo dataset for this project.
 
 ```bash
 # One command to download and set up data (from GitHub releases)
-python scripts/download_data.py
+python scripts/download_data.py  # pinned ChoCo v1.0.0, SHA-256 verified
+
+# Or reuse a local copy of that exact archive (the same checks still run)
+python scripts/download_data.py --archive /path/to/v1.0.0.zip
 
 # Verify setup
 ls data/jams_files/ | wc -l
@@ -27,7 +30,7 @@ ls data/jams_files/ | wc -l
 
 ```bash
 # Option 1: Download from specific release
-python scripts/download_data.py --method release --release data-v0.1.0
+python scripts/download_data.py --method release --release v1.0.0
 
 # Option 2: Clone ChoCo repository directly (full repository)
 python scripts/download_data.py --method clone
@@ -167,8 +170,8 @@ data/
 # Automatic setup - downloads only data files from GitHub releases
 python scripts/download_data.py
 
-# Download from specific release
-python scripts/download_data.py --method release --release data-v0.1.0
+# Request the pinned release explicitly
+python scripts/download_data.py --method release --release v1.0.0
 
 # Verify setup
 ls data/jams_files/ | wc -l
@@ -194,8 +197,8 @@ python scripts/download_data.py --method symlink --choco-path /path/to/your/choc
 
 ### For Release Downloads (Default Method)
 ```bash
-# Re-download latest data
-python scripts/download_data.py
+# Reinstall the pinned data explicitly (this replaces data/jams_files)
+python scripts/download_data.py --replace
 
 # Download specific release
 python scripts/download_data.py --method release --release v1.0.0
@@ -220,10 +223,11 @@ ls data/jams_files/ | wc -l
 
 ## ⚠️ Important Notes
 
-1. **Default Method**: Downloads data files from GitHub releases (fast, efficient)
+1. **Default Method**: Downloads the pinned ChoCo v1.0.0 release and verifies
+   its size and SHA-256 before extraction.
 2. **Data Location**: Data files are stored directly in `data/jams_files/`
 3. **No Git Required**: Default method works without git installation
-4. **Updates**: Re-run the script to get the latest data
+4. **Replacement**: Existing release data is kept unless `--replace` is passed.
 5. **Alternative Methods**: Full repository clone available for advanced users
 
 ## 🆘 Troubleshooting
@@ -240,8 +244,8 @@ ls -la data/jams_files/
 # Re-run download script
 python scripts/download_data.py
 
-# Try specific release if default fails
-python scripts/download_data.py --method release --release data-v0.1.0
+# Request the pinned release explicitly
+python scripts/download_data.py --method release --release v1.0.0
 ```
 
 ### Download Issues?

@@ -199,6 +199,8 @@ class TestIntegration(unittest.TestCase):
         # Test that version is accessible
         self.assertTrue(hasattr(leadsheetanalyser, '__version__'))
         self.assertIsInstance(leadsheetanalyser.__version__, str)
+        self.assertEqual(leadsheetanalyser.__version__, '0.3.0')
+        self.assertTrue(hasattr(leadsheetanalyser, 'modal_profile'))
         
         # Test that __all__ is properly defined
         self.assertTrue(hasattr(leadsheetanalyser, '__all__'))

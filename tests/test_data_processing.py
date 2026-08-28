@@ -157,6 +157,9 @@ class TestDataProcessing(unittest.TestCase):
         
         # Could be various formats (dict, DataFrame, numpy array, etc.)
         self.assertIsInstance(matrix, (dict, pd.DataFrame, list, tuple))
+        self.assertTrue(all(dtype.kind == 'f' for dtype in matrix.dtypes))
+        self.assertEqual(matrix.loc['C:maj', 'F:maj'], 0.5)
+        self.assertEqual(matrix.loc['C:maj', 'A:min'], 0.5)
         
         # Test with single song
         single_song_matrix = create_chord_transition_matrix([self.sample_songs[0]])

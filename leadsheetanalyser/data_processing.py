@@ -250,7 +250,10 @@ def create_chord_transition_matrix(songs_data: List[Dict[str, Any]]) -> pd.DataF
     all_chords = sorted(list(all_chords))
     
     # Create transition matrix
-    matrix = pd.DataFrame(0, index=all_chords, columns=all_chords)
+    # Transition probabilities are fractional.  Initialising with an integer
+    # zero made assignment fail under pandas 3, which no longer silently
+    # upcasts an integer column when a float is stored in it.
+    matrix = pd.DataFrame(0.0, index=all_chords, columns=all_chords)
     
     for current in transitions:
         total_transitions = sum(transitions[current].values())

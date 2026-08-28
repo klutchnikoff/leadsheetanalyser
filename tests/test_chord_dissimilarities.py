@@ -6,9 +6,10 @@ import numpy as np
 from leadsheetanalyser.chord_dissimilarities import (
     reinterpret_chord, modal_dissimilarity, simple_dissimilarity,
     tonal_dissimilarity, chord_name_to_tuple, modal_embedding,
-    create_identity_system, create_tonal_system, modal_profile
+    create_identity_system, create_tonal_system, modal_profile,
+    tonic_modal_profile,
 )
-from leadsheetanalyser.chords import map_chord
+from leadsheetanalyser.chords import map_chord, tonic_relative_kind
 
 
 class TestChordDissimilarities(unittest.TestCase):
@@ -284,3 +285,25 @@ class TestModalProfile(unittest.TestCase):
         batch = modal_profile(kinds, self.W, 0.15)
         self.assertFalse(np.isnan(batch[0]).any())
         self.assertTrue(np.isnan(batch[1]).all())
+
+    def test_tonic_relative_kind_adjoins_and_rebases(self):
+        # G7 (G-B-D-F) read from C becomes {C,D,F,G,B} relative to C.
+        expected = self._kind(2, 5, 7, 11)
+        actual = tonic_relative_kind(7, self.dom7, tonic=0)
+        np.testing.assert_array_equal(actual, expected)
+
+    def test_tonic_relative_kind_is_transposition_invariant(self):
+        base = tonic_relative_kind(7, self.dom7, tonic=0)
+        for shift in range(12):
+            shifted = tonic_relative_kind(
+                (7 + shift) % 12,
+                self.dom7,
+                tonic=shift,
+            )
+            np.testing.assert_array_equal(shifted, base)
+
+    def test_tonic_profile_composes_existing_primitives(self):
+        relative = tonic_relative_kind(7, self.dom7, tonic=0)
+        expected = modal_profile(relative, self.W, 0.15)
+        actual = tonic_modal_profile(7, self.dom7, self.W, 0.15, tonic=0)
+        np.testing.assert_allclose(actual, expected, atol=1e-12)

@@ -283,6 +283,38 @@ def pitch_classes_to_chord(pitch_classes: set, root: int) -> np.ndarray:
     return kind_vec
 
 
+def tonic_relative_kind(
+    root: int,
+    kind_vec: Union[np.ndarray, list],
+    tonic: int = 0,
+) -> np.ndarray:
+    """Return the chord content, with ``tonic`` adjoined, relative to it.
+
+    If ``C(root, kind_vec)`` is the pitch-class content of a rooted chord, this
+    constructs the kind rooted on ``tonic`` whose content is
+    ``C(root, kind_vec) union {tonic}``.  It is the tonic-relative chord kind
+    used before computing a modal profile; adjoining the tonic is deliberate,
+    even when the original chord does not contain it.
+
+    Parameters:
+    - root: root pitch class of the chord (0-11)
+    - kind_vec: binary interval vector of length 11
+    - tonic: reference tonic pitch class (0-11, default C)
+    """
+    if not isinstance(root, (int, np.integer)) or not 0 <= int(root) <= 11:
+        raise ValueError("Root must be an integer in range 0-11")
+    if not isinstance(tonic, (int, np.integer)) or not 0 <= int(tonic) <= 11:
+        raise ValueError("Tonic must be an integer in range 0-11")
+
+    kind = np.asarray(kind_vec)
+    if kind.shape != (11,) or not np.isin(kind, (0, 1)).all():
+        raise ValueError("Chord kind must be a binary vector of length 11")
+
+    pitch_classes = chord_to_pitch_classes(int(root), kind)
+    pitch_classes.add(int(tonic))
+    return pitch_classes_to_chord(pitch_classes, int(tonic))
+
+
 # =============================================================================
 # CHORD TRANSFORMATION FUNCTIONS
 # =============================================================================

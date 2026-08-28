@@ -23,6 +23,7 @@ from . import data_processing
 from . import data_access
 from . import musical_systems
 from . import system_analysis
+from . import key_estimation
 
 # =============================================================================
 # CORE FUNCTIONS - Make key functions available directly
@@ -38,6 +39,7 @@ from .chords import (
     key_retriever,
     chord_to_pitch_classes,
     pitch_classes_to_chord,
+    tonic_relative_kind,
     transpose_chord,
     transpose_to_c,
     closest_fraction,
@@ -58,6 +60,8 @@ from .scales import (
 from .chord_dissimilarities import (
     reinterpret_chord,
     modal_embedding,
+    modal_profile,
+    tonic_modal_profile,
     modal_dissimilarity,
     simple_dissimilarity,
     tonal_dissimilarity,
@@ -99,6 +103,8 @@ from .system_analysis import (
     example_custom_system,
 )
 
+from .key_estimation import estimate_key_from_chords
+
 # Constants
 from .constants import (
     NOTE_TO_PC,
@@ -114,7 +120,7 @@ from .constants import (
     BASIC_CHORD_KINDS,
 )
 
-__version__ = "0.2.0"
+__version__ = "0.3.0"
 __all__ = [
     # =============================================================================
     # MODULES
@@ -124,6 +130,7 @@ __all__ = [
     "scales",
     "chord_dissimilarities",
     "data_processing",
+    "key_estimation",
     
     # =============================================================================
     # CHORD PROCESSING FUNCTIONS
@@ -136,6 +143,7 @@ __all__ = [
     "key_retriever",
     "chord_to_pitch_classes",
     "pitch_classes_to_chord",
+    "tonic_relative_kind",
     "transpose_chord",
     "transpose_to_c",
     "closest_fraction",
@@ -156,12 +164,15 @@ __all__ = [
     # =============================================================================
     "reinterpret_chord",
     "modal_embedding",
+    "modal_profile",
+    "tonic_modal_profile",
     "modal_dissimilarity",
     "simple_dissimilarity", 
     "tonal_dissimilarity",
     "chord_name_to_tuple",
     "create_identity_system",
     "create_tonal_system",
+    "estimate_key_from_chords",
     
     # =============================================================================
     # DATA PROCESSING FUNCTIONS

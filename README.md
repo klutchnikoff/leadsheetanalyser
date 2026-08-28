@@ -6,6 +6,8 @@ A specialized Python package for leadsheet analysis using chord dissimilarity me
 
 - **🎼 Chord Processing**: Parse both Harte notation (`A:min`) and shorthand (`Am`)
 - **📐 Modal Embeddings**: Map chords into continuous geometric spaces using musical systems (e.g. Diatonic, Messiaen)
+- **🧭 Tonic-relative Profiles**: Read a rooted chord from an annotated tonic with a normalized power-mean profile
+- **🔑 Key Estimation**: Estimate a global key from parsed chord successions
 - **🧮 Optimal Transport**: Compute alignment and distance between entire chord progressions
 - **💾 Data Processing**: Tools for musical datasets (JAMS format support)
 - **📚 Rich Constants**: Comprehensive musical constants and predefined systems
@@ -31,6 +33,11 @@ from leadsheetanalyser.song_distance import song_distance
 song1 = [c_maj, f_maj, c_maj]
 song2 = [c_maj, leadsheetanalyser.chord_name_to_tuple("G:7"), c_maj]
 dist = song_distance(song1, song2, W=system, p=1.0)
+
+# Read G7 from the tonic C in a modal system
+from leadsheetanalyser import tonic_modal_profile
+g7_root, g7_kind = leadsheetanalyser.chord_name_to_tuple("G:7")
+profile = tonic_modal_profile(g7_root, g7_kind, system, p=0.15, tonic=0)
 ```
 
 ## Package Structure
@@ -39,6 +46,7 @@ dist = song_distance(song1, song2, W=system, p=1.0)
 leadsheetanalyser/
 ├── chords.py                # Chord processing and parsing
 ├── chord_dissimilarities.py # Modal embeddings and chord distances
+├── key_estimation.py        # Global key estimation from parsed chords
 ├── song_distance.py         # Optimal transport between progressions
 ├── musical_systems.py       # Musical system definitions (W matrix)
 ├── system_analysis.py       # Comparative analysis and clustering

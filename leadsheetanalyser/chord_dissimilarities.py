@@ -10,7 +10,7 @@ from typing import Tuple, Union, List
 import numpy as np
 from .constants import *
 from .chords import chord_name_to_tuple
-from .chords import chord_to_pitch_classes, pitch_classes_to_chord
+from .chords import chord_to_pitch_classes, pitch_classes_to_chord, tonic_relative_kind
 
 
 # =============================================================================
@@ -117,29 +117,6 @@ def reinterpret_chord(kind_vec: np.ndarray, old_root: int, new_root: int) -> np.
         if (new_root + j) % 12 in pitch_classes:
             new_kind[j - 1] = 1
     return new_kind
-
-
-def pitch_classes_to_chord(pitch_classes: set, root: int) -> np.ndarray:
-    """
-    Convert a set of pitch classes to a chord kind vector relative to a root.
-    
-    Parameters:
-    - pitch_classes: set of pitch classes
-    - root: root note to use as reference (0-11)
-    
-    Returns:
-    - binary vector of length 11 representing the chord kind
-    """
-    validate_root(root)
-    
-    kind_vec = np.zeros(11, dtype=int)
-    for pc in pitch_classes:
-        if pc != root:  # Don't include the root in the kind vector
-            interval = (pc - root) % 12
-            if 1 <= interval <= 11:  # Valid interval range
-                kind_vec[interval - 1] = 1
-    
-    return kind_vec
 
 
 def modal_embedding(kind_vec: np.ndarray, W: np.ndarray, mode: str = "linear") -> np.ndarray:
@@ -253,6 +230,27 @@ def modal_profile(kind_vec: np.ndarray, W: np.ndarray, p: float = 0.15) -> Union
     if single:
         return None if unreadable[0] else profile[0]
     return profile
+
+
+def tonic_modal_profile(
+    root: int,
+    kind_vec: np.ndarray,
+    W: np.ndarray,
+    p: float = 0.15,
+    tonic: int = 0,
+) -> Union[np.ndarray, None]:
+    """Compute the modal profile of a rooted chord read from a tonic.
+
+    The chord pitch classes and the tonic are first expressed as a kind rooted
+    on the tonic, then passed unchanged to :func:`modal_profile`.  Keeping this
+    transformation next to the modal-profile implementation prevents clients
+    from maintaining their own power-mean formula.
+    """
+    return modal_profile(
+        tonic_relative_kind(root, kind_vec, tonic),
+        W,
+        p,
+    )
 
 
 # =============================================================================

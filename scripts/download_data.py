@@ -4,24 +4,44 @@ Data Download Script for LeadSheet Analyser
 
 This script downloads and sets up the ChoCo dataset for the leadsheetanalyser package.
 It provides multiple methods for obtaining the data:
-1. Clone ChoCo repository directly (default)
+1. Download the pinned ChoCo release (default)
 2. Create symlink to existing ChoCo repository
-3. Update existing data
+3. Clone or update the ChoCo repository for development
 
 Usage:
-    python scripts/download_data.py                                    # Default: clone ChoCo
+    python scripts/download_data.py                                    # Pinned ChoCo v1.0.0
     python scripts/download_data.py --method symlink --choco-path /path/to/choco
-    python scripts/download_data.py --update                           # Update existing data
+    python scripts/download_data.py --method clone --update
 """
 
 import argparse
+import hashlib
 import os
+import shutil
 import subprocess
 import sys
 import urllib.request
 import zipfile
 import tempfile
 from pathlib import Path
+
+
+RELEASES = {
+    "v1.0.0": {
+        "url": "https://github.com/smashub/choco/releases/download/v1.0.0/v1.0.0.zip",
+        "size": 186_752_842,
+        "sha256": "f50bc9e763cafd891d5934d06f2b4b8adcaee7a258c8a0514ace02561c41726d",
+    },
+}
+
+
+def sha256(path):
+    """SHA-256 of a file, read without loading the archive into memory."""
+    digest = hashlib.sha256()
+    with Path(path).open("rb") as stream:
+        for block in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(block)
+    return digest.hexdigest()
 
 
 def run_command(cmd, cwd=None, check=True):
@@ -57,7 +77,8 @@ def check_git_available():
         return False
 
 
-def download_from_release(data_dir, release_tag="v1.0.0"):
+def download_from_release(data_dir, release_tag="v1.0.0", replace=False,
+                          archive=None):
     """
     Download ChoCo data directly from GitHub releases.
     
@@ -67,31 +88,42 @@ def download_from_release(data_dir, release_tag="v1.0.0"):
     """
     print(f"Downloading ChoCo data from release {release_tag}...")
     
-    # GitHub release URL for ChoCo data
-    release_urls = {
-        "v1.0.0": "https://github.com/smashub/choco/releases/download/v1.0.0/v1.0.0.zip",
-        "data-v0.1.0": "https://github.com/smashub/choco/releases/download/data-v0.1.0/choco-data.zip"
-    }
-    
-    if release_tag not in release_urls:
+    if release_tag not in RELEASES:
         print(f"Error: Unknown release tag '{release_tag}'")
-        print(f"Available releases: {list(release_urls.keys())}")
+        print(f"Available releases: {list(RELEASES)}")
         sys.exit(1)
-    
-    download_url = release_urls[release_tag]
+
+    release = RELEASES[release_tag]
+    jams_dest = data_dir / "jams_files"
+    if (jams_dest.exists() or jams_dest.is_symlink()) and not replace:
+        print(f"Error: {jams_dest} already exists; refusing to replace it.")
+        print("Pass --replace only after confirming that existing data may be overwritten.")
+        sys.exit(1)
     
     # Create temporary directory for download
     with tempfile.TemporaryDirectory() as temp_dir:
         temp_path = Path(temp_dir)
-        zip_file = temp_path / "choco-data.zip"
-        
-        print(f"Downloading from {download_url}...")
-        try:
-            urllib.request.urlretrieve(download_url, zip_file)
-            print(f"Downloaded {zip_file.stat().st_size / (1024*1024):.1f} MB")
-        except Exception as e:
-            print(f"Error downloading file: {e}")
+        if archive:
+            zip_file = Path(archive).expanduser().resolve()
+            print(f"Using local archive {zip_file}")
+        else:
+            zip_file = temp_path / "choco-data.zip"
+            print(f"Downloading from {release['url']}...")
+            try:
+                urllib.request.urlretrieve(release["url"], zip_file)
+                print(f"Downloaded {zip_file.stat().st_size / (1024*1024):.1f} MB")
+            except Exception as e:
+                print(f"Error downloading file: {e}")
+                sys.exit(1)
+
+        actual_size = zip_file.stat().st_size
+        actual_hash = sha256(zip_file)
+        if actual_size != release["size"] or actual_hash != release["sha256"]:
+            print("Error: downloaded archive does not match the pinned release")
+            print(f"  size:   {actual_size} (expected {release['size']})")
+            print(f"  sha256: {actual_hash} (expected {release['sha256']})")
             sys.exit(1)
+        print(f"Verified SHA-256 {actual_hash}")
         
         # Extract the zip file
         print("Extracting data...")
@@ -113,39 +145,41 @@ def download_from_release(data_dir, release_tag="v1.0.0"):
             print("Error: Could not find 'jams' folder in downloaded data")
             sys.exit(1)
         
-        # Move JAMS files to destination
-        jams_dest = data_dir / "jams_files"
-        
+        # Locate metadata before changing anything in data/.
+        meta_file = None
+        for root, dirs, files in os.walk(temp_path):
+            if 'meta.csv' in files:
+                meta_file = Path(root) / 'meta.csv'
+                break
+        meta_dest = data_dir / "meta.csv"
+        if meta_file is None:
+            print("Error: Could not find 'meta.csv' in downloaded data")
+            sys.exit(1)
+        if meta_dest.exists() and sha256(meta_dest) != sha256(meta_file) and not replace:
+            print(f"Error: {meta_dest} differs from the pinned release.")
+            print("Pass --replace only after confirming that it may be overwritten.")
+            sys.exit(1)
+
+        # Install the verified files only after all checks pass.
         # Remove existing directory if it exists
-        if jams_dest.exists():
+        if jams_dest.exists() or jams_dest.is_symlink():
             print(f"Removing existing {jams_dest}")
             if jams_dest.is_symlink():
                 jams_dest.unlink()
             elif jams_dest.is_dir():
-                import shutil
                 shutil.rmtree(jams_dest)
             else:
                 jams_dest.unlink()
         
         # Copy JAMS files
         print(f"Copying JAMS files to {jams_dest}")
-        import shutil
         shutil.copytree(extracted_jams, jams_dest)
-        
-        # Also copy meta.csv if it exists
-        meta_file = None
-        for root, dirs, files in os.walk(temp_path):
-            if 'meta.csv' in files:
-                meta_file = Path(root) / 'meta.csv'
-                break
-        
-        if meta_file and meta_file.exists():
-            meta_dest = data_dir / "meta.csv"
-            if not meta_dest.exists():  # Don't overwrite existing meta.csv
-                print(f"Copying metadata to {meta_dest}")
-                shutil.copy2(meta_file, meta_dest)
-            else:
-                print(f"Metadata file already exists at {meta_dest}, skipping")
+
+        if not meta_dest.exists() or replace:
+            print(f"Copying metadata to {meta_dest}")
+            shutil.copy2(meta_file, meta_dest)
+        else:
+            print(f"Verified existing metadata at {meta_dest}")
     
     print("✅ Successfully downloaded and extracted ChoCo data from release")
     return jams_dest
@@ -305,8 +339,9 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  python scripts/download_data.py                                    # Download from latest release (default)
-  python scripts/download_data.py --method release --release data-v0.1.0
+  python scripts/download_data.py                                    # Pinned ChoCo v1.0.0
+  python scripts/download_data.py --archive /path/to/v1.0.0.zip      # Verify a local copy
+  python scripts/download_data.py --replace                          # Replace existing data explicitly
   python scripts/download_data.py --method clone                     # Clone full ChoCo repository
   python scripts/download_data.py --method symlink --choco-path /path/to/existing/choco
   python scripts/download_data.py --method clone --update            # Update existing ChoCo repository
@@ -338,6 +373,18 @@ Examples:
         action="store_true",
         help="Update existing ChoCo repository (only works with clone method)"
     )
+
+    parser.add_argument(
+        "--replace",
+        action="store_true",
+        help="Replace an existing jams_files directory with the verified release"
+    )
+
+    parser.add_argument(
+        "--archive",
+        type=Path,
+        help="Use a local copy of the pinned release archive instead of downloading it"
+    )
     
     args = parser.parse_args()
     
@@ -348,6 +395,17 @@ Examples:
     
     if args.update and args.method != "clone":
         print("Error: --update only works with --method clone")
+        sys.exit(1)
+
+    if args.replace and args.method != "release":
+        print("Error: --replace only works with the release method")
+        sys.exit(1)
+
+    if args.archive and args.method != "release":
+        print("Error: --archive only works with the release method")
+        sys.exit(1)
+    if args.archive and not args.archive.is_file():
+        print(f"Error: archive does not exist: {args.archive}")
         sys.exit(1)
     
     # Check prerequisites
@@ -368,7 +426,9 @@ Examples:
     # Handle different methods
     if args.method == "release":
         print("Setting up data using release download method...")
-        download_from_release(data_dir, args.release)
+        download_from_release(
+            data_dir, args.release, replace=args.replace, archive=args.archive
+        )
         
     elif args.method == "clone":
         print("Setting up data using clone method...")

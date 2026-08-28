@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-08-27
+
+### Added
+- `modal_profile`, the normalized power-mean reading of one chord kind or a
+  batch of chord kinds over a modal system.
+- `tonic_relative_kind` and `tonic_modal_profile`, the reusable construction
+  for reading a rooted chord after adjoining a reference tonic.
+- `estimate_key_from_chords`, a single chord-succession adapter for music21's
+  global key estimation.
+
+### Fixed
+- Initialize chord-transition matrices with floating-point storage, preserving
+  probability assignments under pandas 3.
+- Remove the duplicate `pitch_classes_to_chord` implementation from
+  `chord_dissimilarities` in favour of the canonical conversion in `chords`.
+
 ## [0.1.0] - 2025-08-04
 
 ### Added
